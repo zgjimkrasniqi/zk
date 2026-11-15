@@ -35,6 +35,8 @@ interface State {
   contactRef: string | null
   viewNonce: number // bump to reset the camera
   mobileTab: 'explore' | 'units' | 'filters'
+  areaView: boolean
+  setAreaView: (v: boolean) => void
   /** undefined = not loaded yet, null = no surroundings file */
   context: ContextData | null | undefined
   setContext: (c: ContextData | null) => void
@@ -65,6 +67,9 @@ export const useStore = create<State>((set) => ({
   contactRef: null,
   viewNonce: 0,
   mobileTab: 'explore',
+  areaView: false,
+  setAreaView: (areaView) =>
+    set((s) => (areaView ? { areaView, selectedBlock: null, selectedFloor: null, selectedApartment: null } : { areaView, viewNonce: s.viewNonce + 1 })),
   context: undefined,
   setContext: (context) => set({ context }),
 
@@ -72,6 +77,7 @@ export const useStore = create<State>((set) => ({
   hoverBlock: (hoveredBlock) => set({ hoveredBlock }),
   selectBlock: (b) =>
     set((s) => ({
+      areaView: false,
       selectedBlock: b,
       selectedFloor: b && s.selectedBlock === b ? s.selectedFloor : null,
       selectedApartment: b && s.selectedBlock === b ? s.selectedApartment : null,
@@ -90,6 +96,7 @@ export const useStore = create<State>((set) => ({
   closeContact: () => set({ contactOpen: false }),
   resetView: () =>
     set((s) => ({
+      areaView: false,
       selectedBlock: null,
       selectedFloor: null,
       selectedApartment: null,

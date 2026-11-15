@@ -6,14 +6,16 @@ import { useStore } from '../store'
 import { Block } from './Block'
 import { GlbModel } from './GlbModel'
 import { Surroundings } from './Surroundings'
-import { Context, useContextData } from './Context'
-import { OVERVIEW, blockView, floorView } from './layout'
+import { Context, contextRotation, useContextData } from './Context'
+import { CompassUpdater } from './CompassUpdater'
+import { AREA_VIEW, OVERVIEW, blockView, floorView } from './layout'
 
 function CameraRig() {
   const ref = useRef<CameraControls>(null)
   const selectedBlock = useStore((s) => s.selectedBlock)
   const selectedFloor = useStore((s) => s.selectedFloor)
   const viewNonce = useStore((s) => s.viewNonce)
+  const areaView = useStore((s) => s.areaView)
   const first = useRef(true)
   const aspect = useThree((s) => s.size.width / s.size.height)
   // Narrow (portrait) screens need the camera further back to frame the same view.
@@ -41,7 +43,10 @@ function CameraRig() {
       return
     }
     c.smoothTime = 0.45
-    if (selectedBlock && selectedFloor !== null) {
+    if (areaView) {
+      c.smoothTime = 0.8
+      c.setLookAt(...fit(AREA_VIEW.pos, AREA_VIEW.target), true)
+    } else if (selectedBlock && selectedFloor !== null) {
       const v = floorView(selectedBlock, selectedFloor)
       c.setLookAt(...fit(v.pos, v.target), true)
     } else if (selectedBlock) {
@@ -51,14 +56,14 @@ function CameraRig() {
       c.setLookAt(...fit(OVERVIEW.pos, OVERVIEW.target), true)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedBlock, selectedFloor, viewNonce, k])
+  }, [selectedBlock, selectedFloor, viewNonce, k, areaView])
 
   return (
     <CameraControls
       ref={ref}
       makeDefault
       minDistance={18}
-      maxDistance={320}
+      maxDistance={520}
       maxPolarAngle={Math.PI / 2.08}
       dollySpeed={0.6}
       draggingSmoothTime={0.12}
@@ -113,6 +118,7 @@ export function Scene() {
 
       <Surroundings withContext={!!context} />
       {context && <Context data={context} />}
+      <CompassUpdater rotation={contextRotation(context ?? null)} />
 
       <Suspense fallback={null}>{modelSource === 'glb' && <GlbModel />}</Suspense>
 

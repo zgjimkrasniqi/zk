@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { useStore } from '../store'
+import { Landmarks, StreetLabels } from './Labels'
 
 /**
  * Real surroundings of the site from OpenStreetMap (public/context.json, built with
@@ -12,8 +13,9 @@ import { useStore } from '../store'
 type Pt = [number, number]
 export interface ContextData {
   buildings: { pts: Pt[]; h: number }[]
-  roads: { pts: Pt[]; w: number; kind: string }[]
+  roads: { pts: Pt[]; w: number; kind: string; name?: string }[]
   green: { pts: Pt[] }[]
+  places?: { name: string; x: number; z: number; h: number; d: number; kind?: string }[]
   site: { rotation?: number; street: { angle: number; x: number; z: number } | null } | null
 }
 
@@ -111,12 +113,12 @@ export function Context({ data }: { data: ContextData }) {
       )}
       {roads && (
         <mesh geometry={roads} receiveShadow raycast={() => null}>
-          <meshStandardMaterial color="#b9b8b6" roughness={1} />
+          <meshStandardMaterial color="#a3a19d" roughness={1} />
         </mesh>
       )}
       {paths && (
         <mesh geometry={paths} receiveShadow raycast={() => null}>
-          <meshStandardMaterial color="#d9d4cd" roughness={1} />
+          <meshStandardMaterial color="#cfcac3" roughness={1} />
         </mesh>
       )}
       {green && (
@@ -124,6 +126,8 @@ export function Context({ data }: { data: ContextData }) {
           <meshStandardMaterial color="#cdd0c8" roughness={1} />
         </mesh>
       )}
+      <StreetLabels data={data} />
+      <Landmarks data={data} />
     </group>
   )
 }

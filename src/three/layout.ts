@@ -152,3 +152,9 @@ export const OVERVIEW = {
   pos: [-128, 116, 166] as const,
   target: [6, 18, 4] as const,
 }
+
+/** High aerial view of the neighbourhood, for street names and landmarks. */
+export const AREA_VIEW = {
+  pos: [-150, 330, 210] as const,
+  target: [0, 0, 10] as const,
+}

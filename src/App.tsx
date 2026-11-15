@@ -34,6 +34,9 @@ function useScrollTopOnSelection() {
 function TopBar() {
   const openContact = useStore((s) => s.openContact)
   const resetView = useStore((s) => s.resetView)
+  const areaView = useStore((s) => s.areaView)
+  const setAreaView = useStore((s) => s.setAreaView)
+  const hasContext = !!useStore((s) => s.context)
   return (
     <header className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-center justify-between gap-3 px-4 pt-[max(env(safe-area-inset-top),12px)] sm:px-6 sm:pt-5">
       <div className="pointer-events-auto flex items-center gap-3 whitespace-nowrap rounded-full bg-ink-800 py-2 pl-5 pr-4 text-sand-100 shadow-panel">
@@ -44,6 +47,18 @@ function TopBar() {
         </span>
       </div>
       <div className="pointer-events-auto flex items-center gap-2">
+        {hasContext && (
+          <button
+            onClick={() => setAreaView(!areaView)}
+            className={`inline-flex items-center gap-2 rounded-full px-3.5 py-2.5 text-[11px] font-medium uppercase tracking-[0.14em] shadow-panel backdrop-blur transition ${
+              areaView ? 'bg-bronze-600 text-white' : 'bg-sand-50/90 text-ink-700 hover:bg-white'
+            }`}
+            title="Show the neighbourhood with street names"
+          >
+            {Icon.map}
+            <span className="hidden sm:inline">{areaView ? 'Back to complex' : 'Location'}</span>
+          </button>
+        )}
         <button onClick={resetView} className="hidden rounded-full bg-sand-50/90 p-2.5 text-ink-700 shadow-panel backdrop-blur hover:bg-white sm:inline-flex" title="Reset view" aria-label="Reset view">
           {Icon.reset}
         </button>
@@ -128,8 +143,11 @@ function DesktopLayout() {
 
       <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between">
         <Disclaimer />
-        <div className="panel pointer-events-auto px-4 py-2">
-          <Legend />
+        <div className="flex items-center gap-3">
+          <Compass />
+          <div className="panel pointer-events-auto px-4 py-2">
+            <Legend />
+          </div>
         </div>
       </div>
     </div>
@@ -150,6 +168,7 @@ function MobileLayout() {
     <div className="pointer-events-none absolute inset-0 z-20 lg:hidden">
       <div className="absolute left-4 right-4 top-[calc(max(env(safe-area-inset-top),12px)+56px)] flex items-center justify-between gap-2">
         <Disclaimer />
+        <Compass className="!h-10 !w-10" />
       </div>
       <section
         className={`panel pointer-events-auto absolute inset-x-0 bottom-0 flex flex-col !rounded-b-none transition-[height] duration-300 ${
@@ -175,6 +194,23 @@ function MobileLayout() {
           {tab === 'explore' ? <ExplorePanel /> : tab === 'units' ? <UnitsPanel /> : <FilterPanel />}
         </div>
       </section>
+    </div>
+  )
+}
+
+function Compass({ className = '' }: { className?: string }) {
+  return (
+    <div
+      className={`pointer-events-none grid h-11 w-11 place-items-center rounded-full bg-sand-50/90 shadow-panel backdrop-blur ${className}`}
+      title="North"
+    >
+      <div id="compass-needle" className="relative h-9 w-9 transition-transform duration-75">
+        <span className="absolute left-1/2 top-0 -translate-x-1/2 text-[9px] font-semibold leading-none text-bronze-700">N</span>
+        <svg viewBox="0 0 24 24" className="absolute inset-0 h-full w-full">
+          <path d="M12 5 L14.2 12 L12 11 L9.8 12 Z" fill="#8A6F57" />
+          <path d="M12 19 L14.2 12 L12 13 L9.8 12 Z" fill="#cfc6bb" />
+        </svg>
+      </div>
     </div>
   )
 }

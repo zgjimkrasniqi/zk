@@ -66,7 +66,7 @@ const ROAD_W = {
   living_street: 6, service: 4.5, pedestrian: 5, footway: 2.2, path: 2, cycleway: 2.2, steps: 2,
 }
 
-const out = { pin: PIN, source: 'OpenStreetMap contributors (ODbL)', buildings: [], roads: [], green: [], site: null }
+const out = { pin: PIN, source: 'OpenStreetMap contributors (ODbL)', buildings: [], roads: [], green: [], places: [], site: null }
 const siteCandidates = []
 
 const ringsOf = (el) => {
@@ -91,14 +91,24 @@ for (const el of data.elements ?? []) {
       const isHab = /\bhab\b/i.test(name) || inside([0, 0], pts) || building_site
       const rec = { pts: area(pts) < 0 ? pts.slice().reverse() : pts, h: +heightOf(t).toFixed(1), id: el.id, name: t.name }
       if (isHab) siteCandidates.push({ ...rec, d, tags: t })
-      else out.buildings.push({ pts: rec.pts, h: rec.h })
+      else {
+        out.buildings.push({ pts: rec.pts, h: rec.h })
+        if (t.name) out.places.push({ name: t.name, x: +c[0].toFixed(1), z: +c[1].toFixed(1), h: rec.h, kind: t.amenity || t.building, d: Math.round(d) })
+      }
     }
   } else if (t.highway && el.geometry) {
     const w = ROAD_W[t.highway]
     if (!w) continue
     out.roads.push({ pts: el.geometry.map(proj), w, kind: t.highway, name: t.name })
   } else if ((t.leisure && /park|garden|playground|pitch/.test(t.leisure)) || /grass|park|forest|meadow|recreation_ground|cemetery/.test(t.landuse ?? '')) {
-    for (const pts of ringsOf(el)) if (pts.length > 3) out.green.push({ pts })
+    for (const pts of ringsOf(el)) {
+      if (pts.length <= 3) continue
+      out.green.push({ pts })
+      if (t.name) {
+        const c = centroid(pts)
+        out.places.push({ name: t.name, x: +c[0].toFixed(1), z: +c[1].toFixed(1), h: 0, kind: t.leisure || t.landuse, d: Math.round(Math.hypot(c[0], c[1])) })
+      }
+    }
   }
 }
 
