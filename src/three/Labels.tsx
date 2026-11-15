@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { Html } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import type { ContextData } from './Context'
+import { useStore } from '../store'
 
 /**
  * Street names painted on the road surface and pins for nearby landmarks,
@@ -161,6 +162,7 @@ const LANDMARKS: Record<string, string> = {
 }
 
 export function Landmarks({ data }: { data: ContextData }) {
+  const film = useStore((s) => s.film)
   const places = useMemo(() => {
     const seen = new Set<string>()
     return (data.places ?? []).filter((p) => {
@@ -170,6 +172,7 @@ export function Landmarks({ data }: { data: ContextData }) {
     })
   }, [data])
 
+  if (film) return null
   return (
     <group>
       {places.map((p) => (

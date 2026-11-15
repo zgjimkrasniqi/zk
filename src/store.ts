@@ -36,6 +36,8 @@ interface State {
   viewNonce: number // bump to reset the camera
   mobileTab: 'explore' | 'units' | 'filters'
   areaView: boolean
+  /** social-video render mode: no HTML labels in the scene */
+  film: boolean
   setAreaView: (v: boolean) => void
   /** undefined = not loaded yet, null = no surroundings file */
   context: ContextData | null | undefined
@@ -68,6 +70,7 @@ export const useStore = create<State>((set) => ({
   viewNonce: 0,
   mobileTab: 'explore',
   areaView: false,
+  film: false,
   setAreaView: (areaView) =>
     set((s) => (areaView ? { areaView, selectedBlock: null, selectedFloor: null, selectedApartment: null } : { areaView, viewNonce: s.viewNonce + 1 })),
   context: undefined,

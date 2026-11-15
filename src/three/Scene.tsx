@@ -71,22 +71,12 @@ function CameraRig() {
   )
 }
 
-export function Scene() {
+export function SceneContents() {
   const modelSource = useStore((s) => s.modelSource)
-  const selectBlock = useStore((s) => s.selectBlock)
   const mode = modelSource === 'glb' ? 'overlay' : 'solid'
   const context = useContextData()
-
   return (
-    <Canvas
-      shadows
-      dpr={[1, 2]}
-      camera={{ position: [170, 120, 210], fov: 32, near: 1, far: 1500 }}
-      gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.05 }}
-      onPointerMissed={(e) => {
-        if (e.type === 'click' && (e as MouseEvent).detail === 2) selectBlock(null)
-      }}
-    >
+    <>
       <color attach="background" args={['#efe4d8']} />
       <fog attach="fog" args={['#efe4d8', 260, 760]} />
 
@@ -130,6 +120,25 @@ export function Scene() {
         </>
       )}
 
+    </>
+  )
+}
+
+export const GL_PROPS = { antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.05 }
+
+export function Scene() {
+  const selectBlock = useStore((s) => s.selectBlock)
+  return (
+    <Canvas
+      shadows
+      dpr={[1, 2]}
+      camera={{ position: [170, 120, 210], fov: 32, near: 1, far: 1500 }}
+      gl={GL_PROPS}
+      onPointerMissed={(e) => {
+        if (e.type === 'click' && (e as MouseEvent).detail === 2) selectBlock(null)
+      }}
+    >
+      <SceneContents />
       <CameraRig />
     </Canvas>
   )

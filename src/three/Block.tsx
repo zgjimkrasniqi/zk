@@ -222,6 +222,7 @@ export function Block({ id, mode }: { id: BlockId; mode: 'solid' | 'overlay' }) 
   const hoveredBlock = useStore((s) => s.hoveredBlock)
   const selectedFloor = useStore((s) => s.selectedFloor)
   const filters = useStore((s) => s.filters)
+  const film = useStore((s) => s.film)
   const hoverBlock = useStore((s) => s.hoverBlock)
   const selectBlock = useStore((s) => s.selectBlock)
   const selectFloor = useStore((s) => s.selectFloor)
@@ -298,7 +299,7 @@ export function Block({ id, mode }: { id: BlockId; mode: 'solid' | 'overlay' }) 
 
       {focusedFloor !== null && <FloorTiles blockId={id} floor={focusedFloor} />}
 
-      {focusedFloor === null && (
+      {focusedFloor === null && !film && (
         <Html position={[main.x, total + 5, main.z]} center zIndexRange={[20, 0]} style={{ pointerEvents: 'auto' }}>
           <button
             onClick={() => selectBlock(id)}
