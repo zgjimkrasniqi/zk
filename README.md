@@ -108,3 +108,11 @@ partitions stay visible on the floor plan only. It is illustrative.
 `node scripts/render-film.mjs --size 1080x1920 --lang en` renders the promo film frame by frame
 (needs `npx vite preview --port 4173` running, Playwright and ffmpeg). Shots and captions live in
 `src/film/`.
+
+## Seasons and time of day
+
+The bar at the bottom (or the round button on phones) switches the scene between spring, summer,
+autumn and winter (foliage colours, snow on roofs and ground, falling petals / leaves / snow) and
+between day, golden hour and night (lit windows). Palettes live in `src/three/atmosphere.ts`.
+The apartment 3D layout uses the catalogue's furnished render as the floor where it lines up with
+the plan (19 of 24 types), with a Furnished / Plan toggle.

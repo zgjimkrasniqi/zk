@@ -9,6 +9,8 @@ import { Surroundings } from './Surroundings'
 import { Context, contextRotation, useContextData } from './Context'
 import { CompassUpdater } from './CompassUpdater'
 import { AREA_VIEW, OVERVIEW, blockView, floorView } from './layout'
+import { useAtmosphere } from './atmosphere'
+import { Particles } from './Particles'
 
 function CameraRig() {
   const ref = useRef<CameraControls>(null)
@@ -71,20 +73,30 @@ function CameraRig() {
   )
 }
 
+function Exposure({ value }: { value: number }) {
+  const gl = useThree((s) => s.gl)
+  useEffect(() => {
+    gl.toneMappingExposure = value
+  }, [gl, value])
+  return null
+}
+
 export function SceneContents() {
+  const atm = useAtmosphere()
   const modelSource = useStore((s) => s.modelSource)
   const mode = modelSource === 'glb' ? 'overlay' : 'solid'
   const context = useContextData()
   return (
     <>
-      <color attach="background" args={['#efe4d8']} />
-      <fog attach="fog" args={['#efe4d8', 260, 760]} />
+      <color attach="background" args={[atm.sky]} />
+      <fog attach="fog" args={[atm.sky, atm.fog[0], atm.fog[1]]} />
+      <Exposure value={atm.exposure} />
 
-      <hemisphereLight args={['#fff4e6', '#8a6f57', 0.8]} />
+      <hemisphereLight args={[atm.hemi.sky, atm.hemi.ground, atm.hemi.intensity]} />
       <directionalLight
-        position={[-70, 120, 60]}
-        intensity={2.1}
-        color="#fff1df"
+        position={atm.sun.position}
+        intensity={atm.sun.intensity}
+        color={atm.sun.color}
         castShadow
         shadow-mapSize={[4096, 4096]}
         shadow-bias={-0.0004}
@@ -96,10 +108,10 @@ export function SceneContents() {
         shadow-camera-near={10}
         shadow-camera-far={400}
       />
-      <directionalLight position={[80, 40, -60]} intensity={0.35} color="#d7c5b7" />
+      <directionalLight position={[80, 40, -60]} intensity={atm.fill} color="#d7c5b7" />
 
       {/* Studio-style environment built from light panels (no external HDR) */}
-      <Environment resolution={256} frames={1}>
+      <Environment resolution={256} frames={1} environmentIntensity={atm.env}>
         <Lightformer form="rect" intensity={2.2} color="#fff3e4" position={[0, 6, -10]} scale={[20, 6, 1]} />
         <Lightformer form="rect" intensity={1.2} color="#e9d6c2" position={[-10, 3, 6]} rotation-y={Math.PI / 2} scale={[16, 4, 1]} />
         <Lightformer form="rect" intensity={0.8} color="#bca38b" position={[10, 2, 4]} rotation-y={-Math.PI / 2} scale={[16, 4, 1]} />
@@ -107,6 +119,7 @@ export function SceneContents() {
       </Environment>
 
       <Surroundings withContext={!!context} />
+      <Particles />
       {context && <Context data={context} />}
       <CompassUpdater rotation={contextRotation(context ?? null)} />
 

@@ -80,7 +80,7 @@ function pickStreetLabels(roads: ContextData['roads']): StreetLabel[] {
   return labels
 }
 
-function useLabelTexture(text: string, size: number, len: number) {
+function useLabelTexture(text: string, size: number, len: number, color: string) {
   const [fontTick, setFontTick] = useState(0)
   useEffect(() => {
     // redraw once the web font is ready so labels use Jost
@@ -98,17 +98,17 @@ function useLabelTexture(text: string, size: number, len: number) {
     ;(g as CanvasRenderingContext2D & { letterSpacing?: string }).letterSpacing = `${Math.round(size * pxPerM * 0.12)}px`
     g.textAlign = 'center'
     g.textBaseline = 'middle'
-    g.fillStyle = 'rgba(255,255,255,0.92)'
+    g.fillStyle = color
     g.fillText(text, W / 2, H / 2 + 1)
     const t = new THREE.CanvasTexture(c)
     t.colorSpace = THREE.SRGBColorSpace
     t.anisotropy = 8
     return { t, w: W / pxPerM, h: H / pxPerM }
-  }, [text, size, len, fontTick])
+  }, [text, size, len, fontTick, color])
 }
 
-function StreetName({ l }: { l: StreetLabel }) {
-  const { t, w, h } = useLabelTexture(l.name, l.size, l.len)
+function StreetName({ l, color }: { l: StreetLabel; color: string }) {
+  const { t, w, h } = useLabelTexture(l.name, l.size, l.len, color)
   return (
     <group position={[l.x, 0.12, l.z]} rotation={[0, l.angle, 0]} userData={{ streetLabel: true, base: l.angle }}>
       <mesh rotation={[-Math.PI / 2, 0, 0]} raycast={() => null} renderOrder={2}>
@@ -119,7 +119,7 @@ function StreetName({ l }: { l: StreetLabel }) {
   )
 }
 
-export function StreetLabels({ data }: { data: ContextData }) {
+export function StreetLabels({ data, color = 'rgba(255,255,255,0.92)' }: { data: ContextData; color?: string }) {
   const labels = useMemo(() => pickStreetLabels(data.roads), [data])
   const ref = useRef<THREE.Group>(null)
   const v = useMemo(() => ({ dir: new THREE.Vector3(), right: new THREE.Vector3() }), [])
@@ -141,7 +141,7 @@ export function StreetLabels({ data }: { data: ContextData }) {
   return (
     <group ref={ref}>
       {labels.map((l, i) => (
-        <StreetName key={i} l={l} />
+        <StreetName key={i} l={l} color={color} />
       ))}
     </group>
   )

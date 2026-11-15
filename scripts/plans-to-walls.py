@@ -100,13 +100,15 @@ def clean(dark, thin, peach, net_area):
         cy, cx = ys.mean(), xs.mean()
         if y0 <= cy <= y1 and x0 <= cx <= x1 and len(ys) > 0.04 * cpm * cpm:
             g[ys, xs] = True
+    oy, ox = np.nonzero(g)
+    outer = (ox.min() * CELL, oy.min() * CELL, (ox.max() + 1) * CELL, (oy.max() + 1) * CELL)
     for ys, xs in components(t):
         length = max(np.ptp(ys), np.ptp(xs)) + 1
         if length >= 0.8 * cpm and len(ys) / length <= 0.22 * cpm:
             g[ys, xs] = True
     # bridge 1-cell gaps between partitions and structural walls
     g = g | (erode(dilate(g, 1), 1) & to_grid(dark | thin))
-    return g, ppm, (x0 * CELL, y0 * CELL, (x1 + 1) * CELL, (y1 + 1) * CELL)
+    return g, ppm, (x0 * CELL, y0 * CELL, (x1 + 1) * CELL, (y1 + 1) * CELL), outer
 
 def rects(g):
     gh, gw = g.shape
@@ -143,13 +145,14 @@ def main(keys):
         area = net_area(key)
         # Thin black partition lines are not used: in these drawings they are indistinguishable
         # from dimension lines, so partitions drawn that way stay visible on the floor texture only.
-        g, ppm, box = clean(dark, thin, peach, area)
+        g, ppm, box, outer = clean(dark, thin, peach, area)
         rs = rects(g)
         walls = np.zeros_like(dark)
         for x, y, w, h in rs:
             walls[y : y + h, x : x + w] = True
+        rim = Image.open(f.replace('-plan.jpg', '-render.jpg'))
         json.dump(
-            {'w': W, 'h': H, 'ppm': round(float(ppm), 2), 'box': [int(v) for v in box], 'rects': [[int(v) for v in r] for r in rs]},
+            {'w': W, 'h': H, 'ppm': round(float(ppm), 2), 'box': [int(v) for v in box], 'outer': [int(v) for v in outer], 'renderFit': bool(abs((outer[2] - outer[0]) / (outer[3] - outer[1]) / (rim.width / rim.height) - 1) < 0.03), 'rects': [[int(v) for v in r] for r in rs]},
             open(os.path.join(ROOT, 'public/catalog', f'{key}-walls.json'), 'w'),
             separators=(',', ':'),
         )
@@ -157,7 +160,8 @@ def main(keys):
             dbg = im.copy().astype(np.uint8)
             dbg[walls] = [200, 30, 30]
             Image.fromarray(dbg).save(os.environ['DEBUG'] + f'/{key}-mask.png')
-        print(key, f'{W}x{H}', 'ppm', round(float(ppm), 1), 'rects', len(rs), 'area', area)
+        rim = Image.open(f.replace('-plan.jpg', '-render.jpg'))
+        print(key, 'outer aspect', round((outer[2] - outer[0]) / (outer[3] - outer[1]), 3), 'render aspect', round(rim.width / rim.height, 3), f'{W}x{H}', 'ppm', round(float(ppm), 1), 'rects', len(rs), 'area', area)
 
 if __name__ == '__main__':
     main(sys.argv[1:])

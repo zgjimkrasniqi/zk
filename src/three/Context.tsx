@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { useStore } from '../store'
 import { Landmarks, StreetLabels } from './Labels'
+import { useAtmosphere } from './atmosphere'
 
 /**
  * Real surroundings of the site from OpenStreetMap (public/context.json, built with
@@ -98,35 +99,36 @@ export function Context({ data }: { data: ContextData }) {
   }, [data])
 
   const rot = contextRotation(data)
+  const atm = useAtmosphere()
 
   return (
     <group rotation={[0, rot, 0]}>
       {buildings && (
         <mesh geometry={buildings} castShadow receiveShadow raycast={() => null}>
-          <meshStandardMaterial color="#c3c5c7" roughness={0.95} metalness={0} />
+          <meshStandardMaterial color={atm.ctxBuilding} roughness={0.95} metalness={0} />
         </mesh>
       )}
       {edges && (
         <lineSegments geometry={edges} raycast={() => null}>
-          <lineBasicMaterial color="#9fa2a5" transparent opacity={0.7} />
+          <lineBasicMaterial color={atm.ctxEdge} transparent opacity={0.7} />
         </lineSegments>
       )}
       {roads && (
         <mesh geometry={roads} receiveShadow raycast={() => null}>
-          <meshStandardMaterial color="#a3a19d" roughness={1} />
+          <meshStandardMaterial color={atm.road} roughness={1} />
         </mesh>
       )}
       {paths && (
         <mesh geometry={paths} receiveShadow raycast={() => null}>
-          <meshStandardMaterial color="#cfcac3" roughness={1} />
+          <meshStandardMaterial color={atm.path} roughness={1} />
         </mesh>
       )}
       {green && (
         <mesh geometry={green} receiveShadow raycast={() => null}>
-          <meshStandardMaterial color="#cdd0c8" roughness={1} />
+          <meshStandardMaterial color={atm.park} roughness={1} />
         </mesh>
       )}
-      <StreetLabels data={data} />
+      <StreetLabels data={data} color={atm.labels} />
       <Landmarks data={data} />
     </group>
   )

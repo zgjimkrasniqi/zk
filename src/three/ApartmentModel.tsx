@@ -14,7 +14,9 @@ interface Walls {
   w: number
   h: number
   ppm: number
-  box: [number, number, number, number] // x0, y0, x1, y1 in plan pixels
+  box: [number, number, number, number] // x0, y0, x1, y1 in plan pixels (floor area)
+  outer: [number, number, number, number] // outer face of the walls, matches the render crop
+  renderFit: boolean // the furnished render lines up with the plan
   rects: [number, number, number, number][] // x, y, w, h in plan pixels
 }
 
@@ -36,23 +38,28 @@ function useWalls(key: string) {
   return data
 }
 
-function Flat({ typeKey, data }: { typeKey: string; data: Walls }) {
-  const tex = useTexture(`catalog/${typeKey}-plan.jpg`)
-  const { w, h, ppm, box, rects } = data
-  const [x0, y0, x1, y1] = box
-  const cx = (x0 + x1) / 2
-  const cy = (y0 + y1) / 2
+function Flat({ typeKey, data, furnished }: { typeKey: string; data: Walls; furnished: boolean }) {
+  const useRender = furnished && data.renderFit
+  const tex = useTexture(`catalog/${typeKey}-${useRender ? 'render' : 'plan'}.jpg`)
+  const { w, h, ppm, rects } = data
+  // The render is cropped to the outside of the walls; the plan is cropped to the floor area.
+  const [x0, y0, x1, y1] = useRender ? data.outer : data.box
+  const [bx0, by0, bx1, by1] = data.box
+  const cx = (bx0 + bx1) / 2
+  const cy = (by0 + by1) / 2
   const m = (px: number) => px / ppm
 
   const floorTex = useMemo(() => {
     const t = tex.clone()
     t.colorSpace = THREE.SRGBColorSpace
     t.anisotropy = 8
-    t.repeat.set((x1 - x0) / w, (y1 - y0) / h)
-    t.offset.set(x0 / w, 1 - y1 / h)
+    if (!useRender) {
+      t.repeat.set((x1 - x0) / w, (y1 - y0) / h)
+      t.offset.set(x0 / w, 1 - y1 / h)
+    }
     t.needsUpdate = true
     return t
-  }, [tex, w, h, x0, y0, x1, y1])
+  }, [tex, w, h, x0, y0, x1, y1, useRender])
 
   const { walls, caps } = useMemo(() => {
     const wg: THREE.BufferGeometry[] = []
@@ -74,19 +81,21 @@ function Flat({ typeKey, data }: { typeKey: string; data: Walls }) {
 
   const fw = m(x1 - x0)
   const fd = m(y1 - y0)
+  const fx = m((x0 + x1) / 2 - cx)
+  const fz = m((y0 + y1) / 2 - cy)
   return (
     <group>
-      {/* the plan is shown unlit so it keeps the catalogue colours; shadows go on a layer above */}
-      <mesh rotation-x={-Math.PI / 2} position={[0, 0.01, 0]}>
+      {/* the plan / render is shown unlit so it keeps the catalogue colours; shadows go on a layer above */}
+      <mesh rotation-x={-Math.PI / 2} position={[fx, 0.01, fz]}>
         <planeGeometry args={[fw, fd]} />
         <meshBasicMaterial map={floorTex} toneMapped={false} />
       </mesh>
-      <mesh rotation-x={-Math.PI / 2} receiveShadow position={[0, 0.02, 0]}>
+      <mesh rotation-x={-Math.PI / 2} receiveShadow position={[fx, 0.02, fz]}>
         <planeGeometry args={[fw, fd]} />
         <shadowMaterial opacity={0.22} />
       </mesh>
       {/* slab edge under the plan */}
-      <mesh position={[0, -0.15, 0]} receiveShadow>
+      <mesh position={[fx, -0.15, fz]} receiveShadow>
         <boxGeometry args={[fw + 0.2, 0.3, fd + 0.2]} />
         <meshStandardMaterial color="#d9cfc3" roughness={1} />
       </mesh>
@@ -104,7 +113,7 @@ function Flat({ typeKey, data }: { typeKey: string; data: Walls }) {
   )
 }
 
-function Scene({ typeKey, data, autoRotate }: { typeKey: string; data: Walls; autoRotate: boolean }) {
+function Scene({ typeKey, data, autoRotate, furnished }: { typeKey: string; data: Walls; autoRotate: boolean; furnished: boolean }) {
   const span = Math.max(data.box[2] - data.box[0], data.box[3] - data.box[1]) / data.ppm
   return (
     <>
@@ -127,7 +136,7 @@ function Scene({ typeKey, data, autoRotate }: { typeKey: string; data: Walls; au
         <Lightformer form="circle" intensity={2} color="#ffffff" position={[0, 10, 0]} rotation-x={Math.PI / 2} scale={5} />
       </Environment>
       <Suspense fallback={null}>
-        <Flat typeKey={typeKey} data={data} />
+        <Flat typeKey={typeKey} data={data} furnished={furnished} />
       </Suspense>
       <ContactShadows position={[0, -0.31, 0]} scale={span * 2} blur={2.5} opacity={0.35} far={3} />
       <OrbitControls
@@ -147,13 +156,29 @@ function Scene({ typeKey, data, autoRotate }: { typeKey: string; data: Walls; au
 export function ApartmentViewer({ typeKey, className = '', large = false }: { typeKey: string; className?: string; large?: boolean }) {
   const data = useWalls(typeKey)
   const [interacted, setInteracted] = useState(false)
+  const [furnished, setFurnished] = useState(true)
   useEffect(() => setInteracted(false), [typeKey])
   if (!data)
     return <div className={`grid place-items-center text-[11px] uppercase tracking-[0.2em] text-bronze-600 ${className}`}>Loading 3D layout…</div>
   const span = Math.max(data.box[2] - data.box[0], data.box[3] - data.box[1]) / data.ppm
   const d = span * (large ? 1.6 : 1.35) + 3
   return (
-    <div className={className} onPointerDown={() => setInteracted(true)}>
+    <div className={`relative ${className}`} onPointerDown={() => setInteracted(true)}>
+      {data.renderFit && (
+        <div className={`absolute z-10 flex gap-0.5 rounded-full bg-white/85 p-0.5 shadow-sm backdrop-blur ${large ? 'bottom-4 right-4' : 'bottom-2 right-2'}`}>
+          {([true, false] as const).map((f) => (
+            <button
+              key={String(f)}
+              onClick={() => setFurnished(f)}
+              className={`rounded-full px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] transition ${
+                furnished === f ? 'bg-ink-800 text-sand-100' : 'text-ink-500 hover:text-ink-800'
+              }`}
+            >
+              {f ? 'Furnished' : 'Plan'}
+            </button>
+          ))}
+        </div>
+      )}
       <Canvas
         key={typeKey}
         shadows
@@ -161,7 +186,7 @@ export function ApartmentViewer({ typeKey, className = '', large = false }: { ty
         camera={{ position: [-d * 0.45, d * 0.85, d * 0.6], fov: 35, near: 0.1, far: 500 }}
         gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.05 }}
       >
-        <Scene typeKey={typeKey} data={data} autoRotate={!interacted} />
+        <Scene typeKey={typeKey} data={data} autoRotate={!interacted} furnished={furnished} />
       </Canvas>
     </div>
   )

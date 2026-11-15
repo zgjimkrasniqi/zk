@@ -7,6 +7,7 @@ import { FilterPanel } from './ui/FilterPanel'
 import { UnitsPanel } from './ui/UnitsPanel'
 import { ContactModal } from './ui/ContactModal'
 import { Icon, Legend, Logo } from './ui/common'
+import { AtmosphereBar, AtmosphereButton } from './ui/Atmosphere'
 
 function useModelCheck() {
   const setModelSource = useStore((s) => s.setModelSource)
@@ -153,8 +154,9 @@ function DesktopLayout() {
         </div>
       </aside>
 
-      <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between">
+      <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between gap-3">
         <Disclaimer />
+        <AtmosphereBar />
         <div className="flex items-center gap-3">
           <Compass />
           <div className="panel pointer-events-auto px-4 py-2">
@@ -180,7 +182,10 @@ function MobileLayout() {
     <div className="pointer-events-none absolute inset-0 z-20 lg:hidden">
       <div className="absolute left-4 right-4 top-[calc(max(env(safe-area-inset-top),12px)+56px)] flex items-center justify-between gap-2">
         <Disclaimer />
-        <Compass className="!h-10 !w-10" />
+        <div className="flex items-center gap-2">
+          <AtmosphereButton />
+          <Compass className="!h-10 !w-10" />
+        </div>
       </div>
       <section
         className={`panel pointer-events-auto absolute inset-x-0 bottom-0 flex flex-col !rounded-b-none transition-[height] duration-300 ${

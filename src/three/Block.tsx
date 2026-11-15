@@ -7,6 +7,7 @@ import { APARTMENTS, blockById, type BlockId } from '../data/apartments'
 import { capColor, facadeTextures, frameColor } from './facade'
 import { LAYOUT, FLOOR_H, floorBottom, floorHeight, blockHeight, type Part } from './layout'
 import { FloorTiles } from './FloorTiles'
+import { useAtmosphere } from './atmosphere'
 
 const BRONZE = new THREE.Color('#A08468')
 const noRaycast = () => null
@@ -64,6 +65,7 @@ interface FloorProps {
 
 function Floor({ p, floor, inset, mode, ghost, selected, hovered, dimmed, onOver, onClick }: FloorProps) {
   const mats = useFloorMaterials(p, floor, inset)
+  const atm = useAtmosphere()
   const h = floorHeight(floor)
   const y = floorBottom(floor) + h / 2
 
@@ -87,6 +89,13 @@ function Floor({ p, floor, inset, mode, ghost, selected, hovered, dimmed, onOver
     }
   }, [mats, hovered, selected, dimmed, mode, ghost])
 
+  // Season / time of day: lit windows, snow on the roof slab
+  useEffect(() => {
+    const list = mats as THREE.MeshStandardMaterial[]
+    for (const m of list) m.emissiveIntensity = atm.glow
+    list[2].color.set(atm.roofTop && floor === p.levels - 1 ? atm.roofTop : capColor(p.style))
+  }, [mats, atm.glow, atm.roofTop, floor, p.levels, p.style])
+
   return (
     <mesh
       position={[p.x, y, p.z]}
@@ -106,6 +115,7 @@ function Floor({ p, floor, inset, mode, ghost, selected, hovered, dimmed, onOver
 
 /** Open two-storey frame that crowns the towers in the catalogue render. */
 function Crown({ p, dimmed }: { p: Part; dimmed: boolean }) {
+  const atm = useAtmosphere()
   const y0 = floorBottom(p.levels - 1)
   const H = FLOOR_H * 2
   const t = 0.4
@@ -149,7 +159,7 @@ function Crown({ p, dimmed }: { p: Part; dimmed: boolean }) {
       {/* penthouse terrace deck inside the frame */}
       <mesh position={[0, 0.06, 0]} receiveShadow>
         <boxGeometry args={[p.w - 0.3, 0.12, p.d - 0.3]} />
-        <meshStandardMaterial color="#8d7158" roughness={0.85} />
+        <meshStandardMaterial color={atm.roofTop ?? '#8d7158'} roughness={0.85} />
       </mesh>
       {/* glass balustrade */}
       <mesh position={[0, 0.6, 0]}>
@@ -161,6 +171,7 @@ function Crown({ p, dimmed }: { p: Part; dimmed: boolean }) {
 }
 
 function RoofGarden({ p }: { p: Part }) {
+  const atm = useAtmosphere()
   const y = floorBottom(p.levels - 1) + FLOOR_H
   const trees = useMemo(() => {
     const out: [number, number, number][] = []
@@ -196,17 +207,17 @@ function RoofGarden({ p }: { p: Part }) {
       ))}
       <mesh position={[0, 0.12, 0]} receiveShadow>
         <boxGeometry args={[p.w - 1.2, 0.24, p.d - 1.2]} />
-        <meshStandardMaterial color="#8c936f" roughness={1} />
+        <meshStandardMaterial color={atm.lawn} roughness={1} />
       </mesh>
       {trees.map(([x, z, s], i) => (
         <group key={i} position={[x, 0.2, z]} scale={s}>
           <mesh position={[0, 0.9, 0]}>
             <cylinderGeometry args={[0.08, 0.12, 1.8, 5]} />
-            <meshStandardMaterial color="#5a4a3c" />
+            <meshStandardMaterial color={atm.trunk} />
           </mesh>
           <mesh position={[0, 2.2, 0]} castShadow>
             <icosahedronGeometry args={[1.1, 0]} />
-            <meshStandardMaterial color="#79845f" flatShading roughness={1} />
+            <meshStandardMaterial color={atm.foliage[i % atm.foliage.length]} flatShading roughness={1} />
           </mesh>
         </group>
       ))}
@@ -215,6 +226,7 @@ function RoofGarden({ p }: { p: Part }) {
 }
 
 export function Block({ id, mode }: { id: BlockId; mode: 'solid' | 'overlay' }) {
+  const atm = useAtmosphere()
   const b = LAYOUT[id]
   const main = b.parts[0]
   const info = blockById(id)
@@ -290,7 +302,7 @@ export function Block({ id, mode }: { id: BlockId; mode: 'solid' | 'overlay' }) 
               {!p.crown && !p.roofGarden && (
                 <mesh position={[p.x, floorBottom(p.levels - 1) + FLOOR_H + 0.5, p.z]} castShadow>
                   <boxGeometry args={[p.w, 1, p.d]} />
-                  <meshStandardMaterial color={capColor(p.style)} roughness={0.9} />
+                  <meshStandardMaterial color={atm.roofTop ?? capColor(p.style)} roughness={0.9} />
                 </mesh>
               )}
             </group>

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { ContextData } from './three/Context'
+import type { Season, TimeOfDay } from './three/atmosphere'
 import { APARTMENTS, type Apartment, type BlockId, type Status } from './data/apartments'
 
 export interface Filters {
@@ -38,6 +39,10 @@ interface State {
   areaView: boolean
   /** social-video render mode: no HTML labels in the scene */
   film: boolean
+  season: Season
+  timeOfDay: TimeOfDay
+  setSeason: (s: Season) => void
+  setTimeOfDay: (t: TimeOfDay) => void
   setAreaView: (v: boolean) => void
   /** undefined = not loaded yet, null = no surroundings file */
   context: ContextData | null | undefined
@@ -71,6 +76,10 @@ export const useStore = create<State>((set) => ({
   mobileTab: 'explore',
   areaView: false,
   film: false,
+  season: 'summer',
+  timeOfDay: 'day',
+  setSeason: (season) => set({ season }),
+  setTimeOfDay: (timeOfDay) => set({ timeOfDay }),
   setAreaView: (areaView) =>
     set((s) => (areaView ? { areaView, selectedBlock: null, selectedFloor: null, selectedApartment: null } : { areaView, viewNonce: s.viewNonce + 1 })),
   context: undefined,
