@@ -6,6 +6,7 @@ import { useStore } from '../store'
 import { Block } from './Block'
 import { GlbModel } from './GlbModel'
 import { Surroundings } from './Surroundings'
+import { Context, useContextData } from './Context'
 import { OVERVIEW, blockView, floorView } from './layout'
 
 function CameraRig() {
@@ -69,6 +70,7 @@ export function Scene() {
   const modelSource = useStore((s) => s.modelSource)
   const selectBlock = useStore((s) => s.selectBlock)
   const mode = modelSource === 'glb' ? 'overlay' : 'solid'
+  const context = useContextData()
 
   return (
     <Canvas
@@ -81,7 +83,7 @@ export function Scene() {
       }}
     >
       <color attach="background" args={['#efe4d8']} />
-      <fog attach="fog" args={['#efe4d8', 220, 620]} />
+      <fog attach="fog" args={['#efe4d8', 260, 760]} />
 
       <hemisphereLight args={['#fff4e6', '#8a6f57', 0.8]} />
       <directionalLight
@@ -109,7 +111,8 @@ export function Scene() {
         <Lightformer form="circle" intensity={3} color="#ffffff" position={[0, 12, 0]} rotation-x={Math.PI / 2} scale={6} />
       </Environment>
 
-      <Surroundings />
+      <Surroundings withContext={!!context} />
+      {context && <Context data={context} />}
 
       <Suspense fallback={null}>{modelSource === 'glb' && <GlbModel />}</Suspense>
 

@@ -27,12 +27,36 @@ npm run preview    # serves dist/ on http://localhost:4173
     per entrance (Hyrja A, B, C) and per floor, with highlight overlays.
     Adjust positions/sizes in `src/three/layout.ts` (`LAYOUT`) so the volumes line up with the model.
   * **Missing (current default) →** a **procedural model** modelled after the catalogue
-    cover render: Hyrja C is a navy volume (G+13) locked into a taller charcoal tower
-    (G+16) with an open frame crown; Hyrja A is a brown tower (G+13) with an open frame
-    crown and a white G+8 wing; Hyrja B is a white G+7 mid-rise with loggias and roof
-    gardens. Towers carry a vertical strip of recessed, lit balconies. Dimensions are
+    cover render and fitted to the real plot: Hyrja C (south-east) is a charcoal tower
+    (G+16) with an open frame crown, a navy G+13 volume and a white G+7 end block; Hyrja A
+    (north) is a brown tower (G+13) with an open frame crown and a white G+8 wing; Hyrja B
+    (east wing) is a white G+7 mid-rise with roof gardens. Which entrance sits in which
+    wing is assumed. Towers carry a vertical strip of recessed, lit balconies. Dimensions are
     approximate and not taken from drawings (see `src/three/layout.ts`).
 * The UI states this in the “Illustrative 3D model” chip (bottom left).
+
+## Real surroundings (OpenStreetMap)
+
+`public/context.json` holds the buildings, streets and parks within ~400 m of the
+Google Maps pin for Kompleksi HAB 13 (42.65725, 21.17025), drawn in muted grey so
+HAB 13 stands out. The C-shaped construction footprint at the pin is used as the
+plot: the HAB 13 model is fitted to it (north wing, east wing, south wing; courtyard
+open to the west) and the map is rotated to line up with it. Context heights come
+from OSM tags where present, otherwise estimates. Map data © OpenStreetMap
+contributors (ODbL); the attribution is shown in the app.
+
+To refresh it, export the query below from overpass-turbo.eu (Export → raw OSM data)
+and run `node scripts/osm-to-context.mjs export.json`:
+
+```
+[out:json][timeout:90];
+(way["building"](around:400,42.6572453,21.1702514);
+relation["building"](around:400,42.6572453,21.1702514);
+way["highway"](around:450,42.6572453,21.1702514);
+way["landuse"](around:400,42.6572453,21.1702514);
+way["leisure"](around:400,42.6572453,21.1702514););
+out body geom;
+```
 
 ## Data
 

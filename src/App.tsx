@@ -58,6 +58,7 @@ function TopBar() {
 
 function Disclaimer() {
   const modelSource = useStore((s) => s.modelSource)
+  const hasContext = !!useStore((s) => s.context)
   const [open, setOpen] = useState(false)
   return (
     <div className="pointer-events-auto relative">
@@ -80,6 +81,11 @@ function Disclaimer() {
           <p className="mt-2 text-sand-200/80">
             Floor bands and unit zones are simulated overlays sized from the catalogue areas. They are not architectural floor geometry.
           </p>
+          {hasContext && (
+            <p className="mt-2 text-sand-200/80">
+              Surrounding buildings and streets (grey) come from OpenStreetMap around the HAB 13 plot. Their heights are estimated.
+            </p>
+          )}
           <p className="mt-2 text-sand-200/80">
             Availability is <b className="font-medium text-sand-100">sample data</b>. Apartment types, areas, room schedules and plans come from the HAB 13 catalogue.
           </p>
@@ -173,6 +179,21 @@ function MobileLayout() {
   )
 }
 
+function Attribution() {
+  const hasContext = !!useStore((s) => s.context)
+  if (!hasContext) return null
+  return (
+    <a
+      href="https://www.openstreetmap.org/copyright"
+      target="_blank"
+      rel="noreferrer"
+      className="absolute bottom-[calc(44vh+4px)] right-2 z-20 rounded bg-sand-50/70 px-1.5 py-0.5 text-[9px] text-ink-500 lg:bottom-1 lg:right-1/2 lg:translate-x-1/2"
+    >
+      Map data © OpenStreetMap contributors
+    </a>
+  )
+}
+
 export default function App() {
   useModelCheck()
   const modelSource = useStore((s) => s.modelSource)
@@ -187,6 +208,7 @@ export default function App() {
       <TopBar />
       <DesktopLayout />
       <MobileLayout />
+      <Attribution />
       <ContactModal />
     </div>
   )

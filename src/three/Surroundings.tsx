@@ -35,11 +35,11 @@ function Lamp({ x, z }: { x: number; z: number }) {
   )
 }
 
-export function Surroundings() {
+export function Surroundings({ withContext = false }: { withContext?: boolean }) {
   const trees = useMemo(() => {
     const pts: [number, number, number][] = []
-    for (let i = 0; i < 9; i++) pts.push([-48 + i * 12, 34, 0.8 + (i % 3) * 0.15])
-    pts.push([-44, -20, 1.1], [-44, -2, 0.9], [-40, 12, 1], [44, -26, 1.1], [46, 4, 0.95], [12, -14, 0.9], [4, -24, 1.15], [-6, -18, 0.85])
+    for (let i = 0; i < 9; i++) pts.push([-48 + i * 12, 44, 0.8 + (i % 3) * 0.15])
+    pts.push([-30, -20, 1.1], [-30, -2, 0.9], [-28, 12, 1], [40, -26, 1.1], [40, 4, 0.95], [-4, 2, 0.9], [2, -6, 0.8])
     return pts
   }, [])
 
@@ -67,16 +67,16 @@ export function Surroundings() {
     <group>
       {/* Base ground */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]} receiveShadow>
-        <circleGeometry args={[260, 64]} />
-        <meshStandardMaterial color="#e9ded2" roughness={1} />
+        <circleGeometry args={[withContext ? 700 : 260, 64]} />
+        <meshStandardMaterial color={withContext ? '#e6e1da' : '#e9ded2'} roughness={1} />
       </mesh>
-      {/* Site plaza */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.0, -2]} receiveShadow>
-        <planeGeometry args={[110, 66]} />
+      {/* Site plaza (plot bounds when the real surroundings are shown) */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={withContext ? [5.5, 0.06, 2.5] : [4, 0.0, 2]} receiveShadow>
+        <planeGeometry args={withContext ? [51, 69] : [100, 80]} />
         <meshStandardMaterial map={paving} roughness={0.95} />
       </mesh>
       {/* Lawns */}
-      {[
+      {!withContext && [
         [8, -16, 22, 12],
         [-44, -6, 8, 26],
         [44, -6, 8, 30],
@@ -86,19 +86,21 @@ export function Surroundings() {
           <meshStandardMaterial color="#a7ad8f" roughness={1} />
         </mesh>
       ))}
+      {!withContext && (
+        <>
       {/* Street */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 40]} receiveShadow>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 50]} receiveShadow>
         <planeGeometry args={[240, 11]} />
         <meshStandardMaterial color="#5c5955" roughness={0.9} />
       </mesh>
       {Array.from({ length: 24 }, (_, i) => (
-        <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[-115 + i * 10, 0.04, 40]}>
+        <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[-115 + i * 10, 0.04, 50]}>
           <planeGeometry args={[4, 0.25]} />
           <meshBasicMaterial color="#e8e1d6" />
         </mesh>
       ))}
       {/* Sidewalk */}
-      <mesh position={[0, 0.12, 32.5]} receiveShadow>
+      <mesh position={[0, 0.12, 42.5]} receiveShadow>
         <boxGeometry args={[240, 0.25, 4]} />
         <meshStandardMaterial color="#cfc5b9" roughness={1} />
       </mesh>
@@ -106,8 +108,14 @@ export function Surroundings() {
         <Tree key={i} x={x} z={z} s={s} />
       ))}
       {[-40, -20, 0, 20, 40].map((x) => (
-        <Lamp key={x} x={x} z={31} />
+        <Lamp key={x} x={x} z={41} />
       ))}
+        </>
+      )}
+      {withContext &&
+        ([[-6, -6, 0.8], [2, 4, 0.9], [-9, 10, 0.75], [5, -8, 0.7]] as const).map(([x, z, s], i) => (
+            <Tree key={`s${i}`} x={x} z={z} s={s} />
+          ))}
     </group>
   )
 }

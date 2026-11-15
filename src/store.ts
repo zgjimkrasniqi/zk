@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { ContextData } from './three/Context'
 import { APARTMENTS, type Apartment, type BlockId, type Status } from './data/apartments'
 
 export interface Filters {
@@ -34,6 +35,9 @@ interface State {
   contactRef: string | null
   viewNonce: number // bump to reset the camera
   mobileTab: 'explore' | 'units' | 'filters'
+  /** undefined = not loaded yet, null = no surroundings file */
+  context: ContextData | null | undefined
+  setContext: (c: ContextData | null) => void
 
   setModelSource: (s: ModelSource) => void
   hoverBlock: (b: BlockId | null) => void
@@ -61,6 +65,8 @@ export const useStore = create<State>((set) => ({
   contactRef: null,
   viewNonce: 0,
   mobileTab: 'explore',
+  context: undefined,
+  setContext: (context) => set({ context }),
 
   setModelSource: (modelSource) => set({ modelSource }),
   hoverBlock: (hoveredBlock) => set({ hoveredBlock }),
