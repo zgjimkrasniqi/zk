@@ -16,12 +16,13 @@ function CameraRig() {
   const first = useRef(true)
   const aspect = useThree((s) => s.size.width / s.size.height)
   // Narrow (portrait) screens need the camera further back to frame the same view.
-  const k = aspect < 1 ? 1.75 : aspect < 1.3 ? 1.25 : 1
+  const portrait = aspect < 1.2
+  const k = portrait ? 1.3 : aspect < 1.4 ? 1.15 : 1
   const fit = (pos: readonly number[], target: readonly number[]) =>
     [
-      ...pos.map((p, i) => target[i] + (p - target[i]) * k + (i === 1 && aspect < 1 ? 10 : 0)),
+      ...pos.map((p, i) => target[i] + (p - target[i]) * k + (i === 1 && portrait ? 14 : 0)),
       target[0],
-      target[1] + (aspect < 1 ? 10 : 0),
+      target[1] + (portrait ? 14 : 0),
       target[2],
     ] as [number, number, number, number, number, number]
 
