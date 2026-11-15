@@ -21,6 +21,18 @@ function useModelCheck() {
   }, [setModelSource])
 }
 
+function useIsDesktop() {
+  const q = '(min-width: 1024px)'
+  const [desktop, setDesktop] = useState(() => window.matchMedia(q).matches)
+  useEffect(() => {
+    const m = window.matchMedia(q)
+    const on = () => setDesktop(m.matches)
+    m.addEventListener('change', on)
+    return () => m.removeEventListener('change', on)
+  }, [])
+  return desktop
+}
+
 function useScrollTopOnSelection() {
   const ref = useRef<HTMLDivElement>(null)
   const apt = useStore((s) => s.selectedApartment)
@@ -233,6 +245,8 @@ function Attribution() {
 export default function App() {
   useModelCheck()
   const modelSource = useStore((s) => s.modelSource)
+  // Mount only one layout so panels (and the apartment 3D viewer) are not rendered twice.
+  const desktop = useIsDesktop()
   return (
     <div className="relative h-full w-full overflow-hidden bg-[radial-gradient(ellipse_at_top,#fbf3ea,#efe4d8)]">
       <div className="absolute inset-0 bottom-[44vh] isolate z-0 lg:bottom-0">
@@ -242,8 +256,7 @@ export default function App() {
         <div className="absolute inset-0 z-10 grid place-items-center text-[11px] uppercase tracking-[0.24em] text-bronze-600">Loading complex…</div>
       )}
       <TopBar />
-      <DesktopLayout />
-      <MobileLayout />
+      {desktop ? <DesktopLayout /> : <MobileLayout />}
       <Attribution />
       <ContactModal />
     </div>

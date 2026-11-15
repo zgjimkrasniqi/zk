@@ -127,13 +127,16 @@ function splitBalanced(apts: Apartment[]): Apartment[][] {
 
 /** Camera presets. Views come from the south-west, looking into the courtyard. */
 const VIEW_DIR = { x: -0.62, z: 0.78 } // horizontal unit-ish vector from target to camera
+// Hyrja B sits behind the Hyrja C wing when seen from the south-west, so look at it across the courtyard.
+const viewDir = (id: BlockId) => (id === 'B' ? { x: -0.97, z: 0.22 } : VIEW_DIR)
 
 export function blockView(id: BlockId) {
   const b = mainPart(id)
   const h = blockHeight(LAYOUT[id])
   const dist = Math.max(h * 2.5, 90)
+  const v = viewDir(id)
   return {
-    pos: [b.x + dist * VIEW_DIR.x, h * 0.72, b.z + dist * VIEW_DIR.z] as const,
+    pos: [b.x + dist * v.x, h * 0.72, b.z + dist * v.z] as const,
     target: [b.x, h * 0.45, b.z] as const,
   }
 }
@@ -142,8 +145,9 @@ export function floorView(id: BlockId, floor: number) {
   const b = mainPart(id)
   const y = floorBottom(floor) + FLOOR_H
   const dist = Math.max(b.w, b.d) * 2.4 + 22
+  const v = viewDir(id)
   return {
-    pos: [b.x + dist * 0.75 * VIEW_DIR.x, y + dist * 0.8, b.z + dist * 0.75 * VIEW_DIR.z] as const,
+    pos: [b.x + dist * 0.75 * v.x, y + dist * 0.8, b.z + dist * 0.75 * v.z] as const,
     target: [b.x, y, b.z] as const,
   }
 }

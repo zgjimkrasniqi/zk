@@ -1,4 +1,6 @@
+import { ApartmentViewer } from '../three/ApartmentModel'
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useStore, matchesFilters, useFilteredApartments, filtersActive } from '../store'
 import { APARTMENTS, ROOM_LABEL, blockById, floorName, type Apartment } from '../data/apartments'
 import { Icon, StatusBadge, StatusDot } from './common'
@@ -47,26 +49,50 @@ function Lightbox({ src, onClose }: { src: string; onClose: () => void }) {
     window.addEventListener('keydown', k)
     return () => window.removeEventListener('keydown', k)
   }, [onClose])
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 grid place-items-center bg-ink-900/80 p-4 backdrop-blur-sm" onClick={onClose}>
       <img src={src} alt="" className="max-h-[90vh] max-w-[94vw] rounded-xl bg-white object-contain shadow-2xl" />
       <button className="absolute right-4 top-4 rounded-full bg-white/90 p-2 text-ink-800" onClick={onClose} aria-label="Close">
         {Icon.close}
       </button>
-    </div>
+    </div>,
+    document.body,
+  )
+}
+
+function Modal3D({ typeKey, title, onClose }: { typeKey: string; title: string; onClose: () => void }) {
+  useEffect(() => {
+    const k = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', k)
+    return () => window.removeEventListener('keydown', k)
+  }, [onClose])
+  return createPortal(
+    <div className="fixed inset-0 z-50 grid place-items-center bg-ink-900/80 p-3 backdrop-blur-sm sm:p-6" onClick={onClose}>
+      <div className="relative h-[86vh] w-[min(1200px,96vw)] overflow-hidden rounded-2xl bg-sand-50 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <ApartmentViewer typeKey={typeKey} large className="h-full w-full touch-none" />
+        <div className="pointer-events-none absolute left-4 top-4 rounded-full bg-ink-800 px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-sand-100">{title}</div>
+        <div className="pointer-events-none absolute bottom-3 left-4 text-[11px] text-ink-500">
+          Drag to orbit · scroll or pinch to zoom · walls traced from the catalogue plan (illustrative)
+        </div>
+        <button className="absolute right-4 top-4 rounded-full bg-white/90 p-2 text-ink-800 shadow" onClick={onClose} aria-label="Close">
+          {Icon.close}
+        </button>
+      </div>
+    </div>,
+    document.body,
   )
 }
 
 export function ApartmentDetail({ a }: { a: Apartment }) {
   const selectApartment = useStore((s) => s.selectApartment)
   const openContact = useStore((s) => s.openContact)
-  const [tab, setTab] = useState<'render' | 'plan'>('render')
+  const [tab, setTab] = useState<'3d' | 'render' | 'plan'>('3d')
   const [zoom, setZoom] = useState(false)
   const block = blockById(a.block)
   const siblings = APARTMENTS.filter((x) => x.block === a.block && x.floor === a.floor)
   const idx = siblings.findIndex((x) => x.id === a.id)
 
-  useEffect(() => setTab('render'), [a.id])
+  useEffect(() => setTab('3d'), [a.id])
 
   const living = a.type.rooms.filter((r) => r.kind !== 'balcony' && r.kind !== 'terrace')
   const outdoor = a.type.rooms.filter((r) => r.kind === 'balcony' || r.kind === 'terrace')
@@ -132,7 +158,7 @@ export function ApartmentDetail({ a }: { a: Apartment }) {
       <div className="mt-4 overflow-hidden rounded-xl border border-ink-800/10 bg-white">
         <div className="flex items-center justify-between border-b border-ink-800/10 px-2 py-1.5">
           <div className="flex gap-1">
-            {(['render', 'plan'] as const).map((t) => (
+            {(['3d', 'render', 'plan'] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -140,7 +166,7 @@ export function ApartmentDetail({ a }: { a: Apartment }) {
                   tab === t ? 'bg-ink-800 text-sand-100' : 'text-ink-500 hover:text-ink-800'
                 }`}
               >
-                {t === 'render' ? '3D plan' : 'Floor plan'}
+                {t === '3d' ? '3D layout' : t === 'render' ? 'Render' : 'Floor plan'}
               </button>
             ))}
           </div>
@@ -148,14 +174,22 @@ export function ApartmentDetail({ a }: { a: Apartment }) {
             {Icon.expand}
           </button>
         </div>
-        <button className="block w-full" onClick={() => setZoom(true)}>
-          <img
-            src={img(a.type.key, tab)}
-            alt={`HAB 13 type ${a.type.code} ${tab === 'render' ? '3D furnished plan' : 'floor plan'}`}
-            className="aspect-[4/3] w-full object-contain p-2"
-          />
-        </button>
-        <div className="border-t border-ink-800/10 px-3 py-1.5 text-[10px] text-ink-500">Imagery: HAB 13 apartment catalogue · {a.type.floorLabel}</div>
+        {tab === '3d' ? (
+          <ApartmentViewer typeKey={a.type.key} className="aspect-[4/3] w-full touch-none" />
+        ) : (
+          <button className="block w-full" onClick={() => setZoom(true)}>
+            <img
+              src={img(a.type.key, tab)}
+              alt={`HAB 13 type ${a.type.code} ${tab === 'render' ? '3D furnished plan' : 'floor plan'}`}
+              className="aspect-[4/3] w-full object-contain p-2"
+            />
+          </button>
+        )}
+        <div className="border-t border-ink-800/10 px-3 py-1.5 text-[10px] text-ink-500">
+          {tab === '3d'
+            ? 'Drag to orbit, scroll to zoom. Walls traced from the catalogue plan; illustrative.'
+            : `Imagery: HAB 13 apartment catalogue · ${a.type.floorLabel}`}
+        </div>
       </div>
 
       <div className="mt-4">
@@ -189,7 +223,12 @@ export function ApartmentDetail({ a }: { a: Apartment }) {
         </button>
       </div>
 
-      {zoom && <Lightbox src={img(a.type.key, tab)} onClose={() => setZoom(false)} />}
+      {zoom &&
+        (tab === '3d' ? (
+          <Modal3D typeKey={a.type.key} title={`Type ${a.type.code} · ${a.type.area} m²`} onClose={() => setZoom(false)} />
+        ) : (
+          <Lightbox src={img(a.type.key, tab)} onClose={() => setZoom(false)} />
+        ))}
     </div>
   )
 }

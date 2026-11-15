@@ -94,3 +94,17 @@ src/
 public/catalog/          images extracted from the catalogue
 public/models/           drop residential-complex.glb here
 ```
+
+## 3D apartment layout
+
+Selecting a residence opens a **3D layout** tab: the catalogue floor plan is laid on the floor and its
+walls are extruded (cut at 2.4 m, dollhouse style). Walls are traced from the plan images with
+`python3 scripts/plans-to-walls.py` (needs numpy + Pillow), which writes `public/catalog/<type>-walls.json`.
+The tracing is heuristic: structural walls and grey partitions are picked up, thin line-drawn
+partitions stay visible on the floor plan only. It is illustrative.
+
+## Social-media video
+
+`node scripts/render-film.mjs --size 1080x1920 --lang en` renders the promo film frame by frame
+(needs `npx vite preview --port 4173` running, Playwright and ffmpeg). Shots and captions live in
+`src/film/`.
