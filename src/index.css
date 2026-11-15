@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: #efe4d8;
+  color: #232222;
+  font-family: Jost, ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+@layer components {
+  .panel {
+    @apply rounded-2xl border border-white/70 bg-sand-50/90 shadow-panel backdrop-blur-xl;
+  }
+  .eyebrow {
+    @apply text-[10px] font-medium uppercase tracking-[0.22em] text-bronze-600;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-ink-800 px-5 py-2.5 text-xs font-medium uppercase tracking-[0.16em] text-sand-100 transition hover:bg-bronze-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bronze-500;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-ink-800/15 px-4 py-2 text-xs font-medium uppercase tracking-[0.14em] text-ink-700 transition hover:border-ink-800/40 hover:bg-white/60;
+  }
+  .chip {
+    @apply rounded-full border px-3 py-1.5 text-xs transition;
+  }
+  .bronze-rule {
+    background: linear-gradient(90deg, #bca38b 0%, #f2eee9 35%, #d0b9a2 65%, #f9f0e7 100%);
+  }
+}
+
+.scroll-thin { scrollbar-width: thin; scrollbar-color: #bca38b transparent; }
+.scroll-thin::-webkit-scrollbar { width: 6px; }
+.scroll-thin::-webkit-scrollbar-thumb { background: #bca38b; border-radius: 3px; }
+
+input[type='range'].dual { pointer-events: none; -webkit-appearance: none; appearance: none; background: transparent; }
+input[type='range'].dual::-webkit-slider-thumb { pointer-events: auto; -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #232222; border: 3px solid #FEECDC; box-shadow: 0 1px 4px rgba(0,0,0,.3); cursor: pointer; }
+input[type='range'].dual::-moz-range-thumb { pointer-events: auto; height: 12px; width: 12px; border-radius: 50%; background: #232222; border: 3px solid #FEECDC; cursor: pointer; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.fade-up { animation: fadeUp .35s ease both; }
