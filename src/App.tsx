@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { Scene } from './three/Scene'
 import { GLB_URL } from './three/GlbModel'
 import { useStore, filtersActive } from './store'
@@ -8,6 +8,18 @@ import { UnitsPanel } from './ui/UnitsPanel'
 import { ContactModal } from './ui/ContactModal'
 import { Icon, Legend, Logo } from './ui/common'
 import { AtmosphereBar, AtmosphereButton } from './ui/Atmosphere'
+
+const Experience = lazy(() => import('./experience/Experience'))
+
+function useHashRoute() {
+  const [hash, setHash] = useState(location.hash)
+  useEffect(() => {
+    const on = () => setHash(location.hash)
+    window.addEventListener('hashchange', on)
+    return () => window.removeEventListener('hashchange', on)
+  }, [])
+  return hash
+}
 
 function useModelCheck() {
   const setModelSource = useStore((s) => s.setModelSource)
@@ -248,6 +260,21 @@ function Attribution() {
 }
 
 export default function App() {
+  const hash = useHashRoute()
+  const m = hash.match(/^#\/experience(?:\/(.+))?$/)
+  if (m)
+    return (
+      <Suspense fallback={<div className="grid h-full place-items-center bg-ink-900 text-[11px] uppercase tracking-[0.24em] text-sand-200">Preparing the residence…</div>}>
+        <Experience
+          aptId={m[1] ? decodeURIComponent(m[1]) : null}
+          onExit={() => (history.state?.fromApp ? history.back() : (location.hash = ''))}
+        />
+      </Suspense>
+    )
+  return <Complex />
+}
+
+function Complex() {
   useModelCheck()
   const modelSource = useStore((s) => s.modelSource)
   // Mount only one layout so panels (and the apartment 3D viewer) are not rendered twice.

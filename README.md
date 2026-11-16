@@ -116,3 +116,12 @@ autumn and winter (foliage colours, snow on roofs and ground, falling petals / l
 between day, golden hour and night (lit windows). Palettes live in `src/three/atmosphere.ts`.
 The apartment 3D layout uses the catalogue's furnished render as the floor where it lines up with
 the plan (19 of 24 types), with a Furnished / Plan toggle.
+
+## 3D experience (walk-through)
+
+From a residence's 3D layout, **3D experience** opens `#/experience/<unit>`: a furnished, walkable
+model of one sample residence (catalogue Type A-01), shown for every unit. It starts as a dollhouse,
+flies in at eye level and has stops (living room, kitchen, bedroom, bathroom, balcony, view), drag to
+look, click or tap the floor to walk, W A S D on a keyboard, and day / sunset / night lighting.
+Code is in `src/experience/` (plan data, procedural furniture and textures, sky and skyline).
+Ambient occlusion and bloom (`@react-three/postprocessing`) run on desktop only; add `?nofx` to turn them off.

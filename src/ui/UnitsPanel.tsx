@@ -185,6 +185,19 @@ export function ApartmentDetail({ a }: { a: Apartment }) {
             />
           </button>
         )}
+        <button
+          onClick={() => {
+            history.pushState({ fromApp: true }, '', `#/experience/${encodeURIComponent(a.id)}`)
+            window.dispatchEvent(new HashChangeEvent('hashchange'))
+          }}
+          className="flex w-full items-center justify-between gap-3 border-t border-ink-800/10 bg-ink-800 px-4 py-3 text-left text-sand-100 transition hover:bg-ink-700"
+        >
+          <span>
+            <span className="block text-[12px] font-medium uppercase tracking-[0.16em]">3D experience</span>
+            <span className="block text-[11px] text-sand-200/75">Walk through a furnished sample residence</span>
+          </span>
+          <span className="rotate-180">{Icon.back}</span>
+        </button>
         <div className="border-t border-ink-800/10 px-3 py-1.5 text-[10px] text-ink-500">
           {tab === '3d'
             ? 'Drag to orbit, scroll to zoom. Walls traced from the catalogue plan; illustrative.'
